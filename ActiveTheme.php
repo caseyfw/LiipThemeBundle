@@ -11,6 +11,10 @@
 
 namespace Liip\ThemeBundle;
 
+use Doctrine\ORM\EntityManager;
+use Liip\ThemeBundle\Entity\Site;
+use Liip\ThemeBundle\Entity\Theme;
+
 /**
  * Contains the currently active theme and allows to change it.
  *
@@ -23,34 +27,59 @@ class ActiveTheme
     /**
      * @var string
      */
-    private $name;
+    protected $name;
 
     /**
      * @var array
      */
-    private $themes;
+    protected $themes;
 
     /**
-     * @param string $name
-     * @param array $themes
+     * @var Theme
      */
-    public function __construct($name, array $themes = array())
-    {
-        $this->setThemes($themes);
+    protected $theme;
 
-        if ($name) {
-            $this->setName($name);
+    /**
+     * @var Site
+     */
+    protected $site;
+
+    /**
+     * @var EntityManager
+     */
+    protected $em;
+
+    /**
+     * @param EntityManager $em
+     */
+    public function __construct(EntityManager $em)
+    {
+        $this->em = $em;
+
+        if (array_key_exists('SERVER_NAME', $_SERVER)) {
+            // cheap and nasty way of determine current domain
+            $domain = $_SERVER["SERVER_NAME"];
+
+            // determine theme for site, based on domain
+            $this->site = $this->em->getRepository('LiipThemeBundle:Site')->findOneByDomain($domain);
+
+            $this->theme = $this->site->getTheme();
+
+            // convert current theme back to boring text version
+            $this->name = $this->theme->getSlug();
         }
+            
+        // fetch list of themes
+        $this->themes = $this->em->getRepository('LiipThemeBundle:Theme')->findAll();
     }
 
     public function getThemes()
     {
-        return (array) $this->themes;
-    }
-
-    public function setThemes(array $themes)
-    {
-        $this->themes = $themes;
+        $themeSlugs = array();
+        foreach($this->themes as $theme) {
+            $themeSlugs[] = $theme->getSlug();
+        }
+        return (array) $themeSlugs;
     }
 
     public function getName()
@@ -58,12 +87,31 @@ class ActiveTheme
         return $this->name;
     }
 
+    /**
+     * This is basically only used by the CacheWarmer to "temporarily" set the
+     * current theme so that when it calls the FileLocator it can look for each
+     * theme's files in turn.
+     * 
+     * Not an authority on which theme is currently active - use
+     * getTheme->getName() instead.
+     */
     public function setName($name)
     {
-        if (!in_array($name, $this->getThemes())) {
-            throw new \InvalidArgumentException(sprintf('The active theme must be in the themes list.'));
-        }
-
         $this->name = $name;
+    }
+    
+    public function getTheme() {
+        return $this->theme;
+    }
+    
+    public function setTheme(Theme $theme) {
+        
+        if ($this->site) $this->site->setTheme($theme);
+        $this->theme = $theme;
+        $this->em->flush();
+    }
+    
+    public function __sleep() {
+        return array();
     }
 }
