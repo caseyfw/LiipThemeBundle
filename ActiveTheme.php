@@ -52,13 +52,13 @@ class ActiveTheme
     /**
      * @param EntityManager $em
      */
-    public function __construct(EntityManager $em)
+    public function __construct(EntityManager $em, $domain = null)
     {
         $this->em = $em;
 
-        if (array_key_exists('SERVER_NAME', $_SERVER)) {
+        if (array_key_exists('SERVER_NAME', $_SERVER) || isset($domain)) {
             // cheap and nasty way of determine current domain
-            $domain = $_SERVER["SERVER_NAME"];
+            $domain = isset($domain) ? $domain : $_SERVER["SERVER_NAME"];
 
             // determine theme for site, based on domain
             $this->site = $this->em->getRepository('LiipThemeBundle:Site')->findOneByDomain($domain);

@@ -35,6 +35,12 @@ class Site
     protected $theme;
 
 
+    public function __construct($domain = null, $theme = null)
+    {
+      $this->domain = $domain;
+      $this->theme = $theme;
+    }
+
     /**
      * Get id
      *

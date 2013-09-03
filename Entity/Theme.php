@@ -43,8 +43,10 @@ class Theme
     protected $sites;
 
 
-    public function __construct()
+    public function __construct($name = null, $slug = null)
     {
+      $this->name = $name;
+      $this->slug = $slug;
       $this->sites = new ArrayCollection();
     }
 

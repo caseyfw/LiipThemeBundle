@@ -9,40 +9,51 @@
  * file that was distributed with this source code.
  */
 
-namespace Liip\Tests;
+namespace Liip\ThemeBundle\Tests;
 
+use Liip\ThemeBundle\Tests\TestBaseManager;
 use Liip\ThemeBundle\Locator\FileLocator;
 use Liip\ThemeBundle\ActiveTheme;
+use Liip\ThemeBundle\Entity\Theme;
+use Liip\ThemeBundle\Entity\Site;
 
-class ActiveThemeTest extends \PHPUnit_Framework_TestCase
+class ActiveThemeTest extends TestBaseManager
 {
     /**
      * @covers Liip\ThemeBundle\ActiveTheme::__construct
      * @covers Liip\ThemeBundle\ActiveTheme::getName
+     * @covers Liip\ThemeBundle\ActiveTheme::getTheme
      */
     public function testGetName()
     {
-        $theme = new ActiveTheme("foo", array("foo"));
+        $this->setupFixtures();
 
-        $this->assertEquals("foo", $theme->getName());
+        $at = new ActiveTheme($this->em, 'example.com');
+
+        $this->assertEquals("foo", $at->getName());
+        $this->assertEquals("Foo", $at->getTheme()->getName());
+        $this->assertEquals("foo", $at->getTheme()->getSlug());
     }
 
     /**
-     * @expectedException InvalidArgumentException
-     * @covers Liip\ThemeBundle\ActiveTheme::getName
+     * @covers Liip\ThemeBundle\ActiveTheme::getThemes
      */
-    public function testConstructInvalidName()
+    public function testGetThemes()
     {
-        $theme = new ActiveTheme("foo", array("bar"));
-    }
+        $this->setupFixtures();
 
-    /**
-     * @expectedException InvalidArgumentException
-     * @covers Liip\ThemeBundle\ActiveTheme::setName
-     */
-    public function testSetInvalidName()
-    {
-        $theme = new ActiveTheme("foo", array("foo"));
-        $theme->setName("bar");
+        $at = new ActiveTheme($this->em, 'example.com');
+
+        $this->assertCount(2, $at->getThemes());
+    }
+    
+    private function setupFixtures() {
+        $themeFoo = new Theme('Foo', 'foo');
+        $this->em->persist($themeFoo);
+        $themeBar = new Theme('Bar', 'bar');
+        $this->em->persist($themeBar);
+        $site = new Site('example.com', $themeFoo);
+        $this->em->persist($site);
+        $this->em->flush();
     }
 }
