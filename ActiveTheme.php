@@ -62,11 +62,13 @@ class ActiveTheme
 
             // determine theme for site, based on domain
             $this->site = $this->em->getRepository('LiipThemeBundle:Site')->findOneByDomain($domain);
+            
+            if ($this->site) {
+                $this->theme = $this->site->getTheme();
 
-            $this->theme = $this->site->getTheme();
-
-            // convert current theme back to boring text version
-            $this->name = $this->theme->getSlug();
+                // convert current theme back to boring text version
+                $this->name = $this->theme->getSlug();
+            }
         }
             
         // fetch list of themes

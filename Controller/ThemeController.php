@@ -25,7 +25,7 @@ class ThemeController extends Controller
         $oldTheme = $at->getTheme();
         $at->setTheme($newTheme);
         
-        return $this->redirect($this->getRequest()->getBaseURL());
+        return $this->redirect($this->getRequest()->getSchemeAndHttpHost());
     }
 
 }
